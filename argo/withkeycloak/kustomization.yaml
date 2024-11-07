@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: argo-prjcts
+resources:
+- ../base
+- argo-workflow-sso-secret.yaml
+- argo-admin-service-account.yaml
+patches:
+- path: argo-role-binding.yaml
+- path: argo-cluster-role-binding.yaml
+- path: argo-server-service.yaml
+- target:
+    kind: Deployment
+    name: argo-server
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/args
+      value: ["server", "--auth-mode=sso", "--secure=false"]
+    - op: replace
+      path: /spec/template/spec/containers/0/readinessProbe/httpGet/scheme
+      value: HTTP
+- path: argo-workflow-controller-configmap.yaml
